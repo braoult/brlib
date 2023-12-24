@@ -1,0 +1,3 @@
+((nil .
+      ((projectile-project-root-functions . 'projectile-root-local)
+       )))
