@@ -1,0 +1,7 @@
+compile_commands.json
+core
+# created when building
+/bin/
+/obj/
+/dep/
+/lib/
