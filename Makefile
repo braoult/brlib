@@ -10,9 +10,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later <https://spdx.org/licenses/GPL-3.0-or-later.html>
 #
 
-# important to know where exactly is project root dir
-ROOTDIR   := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-
 SHELL     := /bin/bash
 CC        := gcc
 LD        := ld
@@ -293,6 +290,5 @@ showflags:
 	@echo LDFLAGS: $(LDFLAGS)
 
 wtf:
-	@printf "ROOTDIR=+%s+\n\n" "$(ROOTDIR)"
 	@printf "OBJDIR=%s\n\n" "$(OBJDIR)"
 	@printf "OBJ=%s\n\n" "$(OBJ)"
