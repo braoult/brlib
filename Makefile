@@ -202,7 +202,7 @@ $(DLIB): $(OBJ) | $(LIBDIR)
 
 $(SLIB): $(OBJ) | $(LIBDIR)
 	@echo "building static library ($@)."
-	$(AR) $(ARFLAGS) $@ $? > /dev/null
+	@$(AR) $(ARFLAGS) $@ $? > /dev/null
 
 ##################################### tests
 .PHONY: testbins cleanbin cleanbindir
