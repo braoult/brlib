@@ -198,7 +198,7 @@ cleanlibdir:
 $(DLIB): LDFLAGS += -shared
 $(DLIB): $(OBJ) | $(LIBDIR)
 	@echo "building shared library ($@)."
-	$(CC) $(CFLAGS) $(LDFLAGS) $? -o $@
+	@$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 $(SLIB): $(OBJ) | $(LIBDIR)
 	@echo "building static library ($@)."
