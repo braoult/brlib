@@ -13,11 +13,15 @@
 #ifndef _BITS_H
 #define _BITS_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <bits/wordsize.h>                        /* defines __WORDSIZE: 32 or 64 */
+#include "br.h"
 
-void bits_implementation(void);
+/**
+ * print_bitops_impl() - print bitops implementation.
+ *
+ * For basic bitops (popcount, ctz, etc...), print the implementation
+ * (builtin, emulated, ...).
+ */
+void print_bitops_impl(void);
 
 #ifndef __has_builtin
 #define __has_builtin(x) 0
@@ -29,54 +33,21 @@ void bits_implementation(void);
  * #endif
  */
 
-/* fixed-size types
+/*  lsb, msb: least/most significant bit: 10101000
+ *                                msb = 7 ^   ^ lsb = 3
  */
-typedef int64_t  s64;
-typedef int32_t  s32;
-typedef int16_t  s16;
-typedef int8_t   s8;
-
-typedef uint64_t u64;
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint8_t  u8;
-
-/* convenience types
- */
-typedef long long int llong;
-typedef unsigned long long int ullong;
-typedef unsigned long int ulong;
-typedef unsigned int uint;
-typedef unsigned short ushort;
-typedef unsigned char uchar;
-/* char is a special case, as it can be signed or unsigned
- */
-typedef signed char schar;
-
-/* define common types sizes
- */
-#define BITS_PER_CHAR 8
-
-#ifndef BITS_PER_SHORT
-#define BITS_PER_SHORT (BITS_PER_CHAR * sizeof (short))
-#endif
-#ifndef BITS_PER_INT
-#define BITS_PER_INT   (BITS_PER_CHAR * sizeof (int))
-#endif
-#ifndef BITS_PER_LONG
-#define BITS_PER_LONG  (BITS_PER_CHAR * sizeof (long))
-#endif
-#ifndef BITS_PER_LLONG
-#define BITS_PER_LLONG (BITS_PER_CHAR * sizeof (long long))
-#endif
+#define lsb64(x) (ctz64(x))
+#define lsb32(x) (ctz32(x))
+#define msb64(x) (63 ^ clz64(x))
+#define msb32(x) (31 ^ clz32(x))
 
 /* count set bits:  10101000 -> 3
  *                  ^ ^ ^
  */
 static __always_inline int popcount64(u64 n)
 {
-#   if __has_builtin(__builtin_popcountl)
-    return __builtin_popcountl(n);
+#   if __has_builtin(__builtin_popcountll)
+    return __builtin_popcountll(n);
 
 #   else
     int count = 0;
@@ -108,11 +79,11 @@ static __always_inline int popcount32(u32 n)
  */
 static __always_inline int ctz64(u64 n)
 {
-#   if __has_builtin(__builtin_ctzl)
-    return __builtin_ctzl(n);
+#   if __has_builtin(__builtin_ctzll)
+    return __builtin_ctzll(n);
 
-#   elif __has_builtin(__builtin_clzl)
-    return __WORDSIZE - (__builtin_clzl(n & -n) + 1);
+#   elif __has_builtin(__builtin_clzll)
+    return __WORDSIZE - (__builtin_clzll(n & -n) + 1);
 
 #   else
     return popcount64((n & -n) - 1);
@@ -122,7 +93,7 @@ static __always_inline int ctz64(u64 n)
 static __always_inline int ctz32(u32 n)
 {
 #   if __has_builtin(__builtin_ctz)
-    return __builtin_ctzl(n);
+    return __builtin_ctz(n);
 
 #   elif __has_builtin(__builtin_clz)
     return __WORDSIZE - (__builtin_clz(n & -n) + 1);
@@ -137,8 +108,8 @@ static __always_inline int ctz32(u32 n)
  */
 static __always_inline int clz64(u64 n)
 {
-#   if __has_builtin(__builtin_clzl)
-    return __builtin_clzl(n);
+#   if __has_builtin(__builtin_clzll)
+    return __builtin_clzll(n);
 
 #   else
     u64 r, q;
@@ -170,8 +141,8 @@ static __always_inline int clz32(u32 n)
 #   endif
 }
 
-/* fls - find last set : 00101000 -> 6
- *                         ^
+/* fls - return one plus msb : 00101000 -> 6
+ *                               ^
  */
 static __always_inline int fls64(u64 n)
 {
@@ -187,18 +158,18 @@ static __always_inline int fls32(u32 n)
     return 32 - clz32(n);
 }
 
-/* find first set :  00101000 -> 4
- *                       ^
+/* ffs - return one plus lsb index:  00101000 -> 4
+ *                                       ^
  */
 static __always_inline uint ffs64(u64 n)
 {
-#   if __has_builtin(__builtin_ffsl)
-    return __builtin_ffsl(n);
+#   if __has_builtin(__builtin_ffsll)
+    return __builtin_ffsll(n);
 
-#   elif __has_builtin(__builtin_ctzl)
+#   elif __has_builtin(__builtin_ctzll)
     if (n == 0)
         return (0);
-    return __builtin_ctzl(n) + 1;
+    return __builtin_ctzll(n) + 1;
 
 #   else
     return popcount64(n ^ ~-n);
@@ -467,7 +438,8 @@ static inline __attribute__((const)) int __bits_per(unsigned long n)
             __bits_per(n)                       \
 )
 
-/** bit_for_each - iterate over an u64/u32 bits
+/**
+ * bit_for_each - iterate over an u64/u32 bits
  * @pos:        an int used as current bit
  * @tmp:        a temp u64/u32 used as temporary storage
  * @ul:         the u64/u32 to loop over
@@ -482,18 +454,18 @@ static inline __attribute__((const)) int __bits_per(unsigned long n)
  *
  * I should probably re-think the implementation...
  */
-#define bit_for_each64(pos, tmp, ul)                                    \
-    for (tmp = ul, pos = ffs64(tmp); tmp; tmp &= (tmp - 1),  pos = ffs64(tmp))
+#define bit_for_each64(pos, tmp, ul)                                  \
+    for (tmp = ul, pos = ctz64(tmp); tmp; tmp ^= 1UL << pos, pos = ctz64(tmp))
 
-#define bit_for_each32(pos, tmp, ul)                                    \
-    for (tmp = ul, pos = ffs32(tmp); tmp; tmp &= (tmp - 1),  pos = ffs32(tmp))
+#define bit_for_each32(pos, tmp, ul)                                  \
+    for (tmp = ul, pos = ctz32(tmp); tmp; tmp ^= 1U << pos, pos = ctz32(tmp))
 
 /** or would it be more useful (counting bits from zero instead of 1) ?
  */
-#define bit_for_each64_2(pos, tmp, ul)                                  \
-    for (tmp = ul, pos = ctz64(tmp); tmp; tmp ^= 1UL << pos, pos = ctz64(tmp))
+#define bit_for_each64_1(pos, tmp, ul)                                    \
+    for (tmp = ul, pos = ffs64(tmp); tmp; tmp &= (tmp - 1),  pos = ffs64(tmp))
 
-#define bit_for_each32_2(pos, tmp, ul)                                  \
-    for (tmp = ul, pos = ctz32(tmp); tmp; tmp ^= 1U << pos, pos = ctz32(tmp))
+#define bit_for_each32_1(pos, tmp, ul)                                    \
+    for (tmp = ul, pos = ffs32(tmp); tmp; tmp &= (tmp - 1),  pos = ffs32(tmp))
 
 #endif  /* _BITS_H */

@@ -18,7 +18,52 @@
 #ifndef _BR_H
 #define _BR_H
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <bits/wordsize.h>                        /* defines __WORDSIZE: 32 or 64 */
+
 #include "struct-group.h"
+
+/* fixed-size types
+ */
+typedef int64_t  s64;
+typedef int32_t  s32;
+typedef int16_t  s16;
+typedef int8_t   s8;
+
+typedef uint64_t u64;
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t  u8;
+
+/* convenience types
+ */
+typedef long long          llong;
+typedef unsigned long long ullong;
+typedef unsigned long int  ulong;
+typedef unsigned int       uint;
+typedef unsigned short     ushort;
+typedef unsigned char      uchar;
+/* char is a special case, as it can be signed or unsigned
+ */
+typedef signed char schar;
+
+/* define common types sizes
+ */
+#define BITS_PER_CHAR 8
+
+#ifndef BITS_PER_SHORT
+#define BITS_PER_SHORT (BITS_PER_CHAR * sizeof (short))
+#endif
+#ifndef BITS_PER_INT
+#define BITS_PER_INT   (BITS_PER_CHAR * sizeof (int))
+#endif
+#ifndef BITS_PER_LONG
+#define BITS_PER_LONG  (BITS_PER_CHAR * sizeof (long))
+#endif
+#ifndef BITS_PER_LLONG
+#define BITS_PER_LLONG (BITS_PER_CHAR * sizeof (long long))
+#endif
 
 /* Indirect stringification.  Doing two levels allows the parameter to be a
  * macro itself.  For example, compile with -DFOO=bar, __stringify(FOO)

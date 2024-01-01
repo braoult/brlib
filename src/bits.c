@@ -14,13 +14,7 @@
 #include "bits.h"
 #include "debug.h"
 
-/**
- * bits_implementation - display bitops implementation.
- *
- * For basic bitops (popcount, ctz, etc...), print the implementation
- * (builtin, emulated).
- */
-void bits_implementation(void)
+void print_bitops_impl(void)
 {
     log(0, "bitops implementation: ");
 
