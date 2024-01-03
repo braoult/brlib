@@ -7,8 +7,6 @@
 #ifndef _BR_LIST_SORT_H
 #define _BR_LIST_SORT_H
 
-//#include <linux/types.h>
-
 struct list_head;
 
 typedef int __attribute__((nonnull(2,3))) (*list_cmp_func_t)(void *,

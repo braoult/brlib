@@ -1,6 +1,6 @@
 /* pjwhash-inline.h - PJW hash function, inline version.
  *
- * Copyright (C) 2021-2022 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -14,7 +14,7 @@
 #ifndef _PJWHASH_INLINE_H
 #define _PJWHASH_INLINE_H
 
-#include "bits.h"
+#include "br.h"
 
 #define THREE_QUARTERS ((int) ((BITS_PER_INT * 3) / 4))
 #define ONE_EIGHTH     ((int) (BITS_PER_INT / 8))

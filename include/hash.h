@@ -9,8 +9,9 @@
    (C) 2002 Nadia Yvette Chambers, IBM */
 
 #include <asm/bitsperlong.h>
-#include "bits.h"
+
 #include "br.h"
+#include "bitops.h"
 
 /*
  * The "GOLDEN_RATIO_PRIME" is used in ifs/btrfs/brtfs_inode.h and

@@ -1,6 +1,6 @@
 /* pjwhash.h - PJW hash function, extern version.
  *
- * Copyright (C) 2021-2022 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -13,7 +13,7 @@
 #ifndef _PJWHASH_H
 #define _PJWHASH_H
 
-#include "bits.h"
+#include "br.h"
 
 /**
  * unsigned int pjwhash - PJW hash function

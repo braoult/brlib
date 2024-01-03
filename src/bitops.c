@@ -1,6 +1,6 @@
-/* bits.c - information about bitops implementation.
+/* bitops.c - information about bitops implementation.
  *
- * Copyright (C) 2021-2022 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -11,7 +11,7 @@
  *
  */
 
-#include "bits.h"
+#include "bitops.h"
 #include "debug.h"
 
 void print_bitops_impl(void)

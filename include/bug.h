@@ -20,9 +20,6 @@
  * can somehow continue operating, perhaps with reduced functionality,
  * it's probably not BUG-worthy.
  *
- * If you're tempted to BUG(), think again:  is completely giving up
- * really the *only* solution?  There are usually better options, where
- * users don't need to reboot ASAP and can mostly shut down cleanly.
  */
 #define BUG() do {                                                                      \
         fprintf(stderr, "BUG: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
@@ -32,9 +29,8 @@
 #define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while (0)
 
 /*
- * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report
- * significant kernel issues that need prompt attention if they should ever
- * appear at runtime.
+ * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report significant
+ * issues that need prompt attention if they should ever appear at runtime.
  *
  * Do not use these macros when checking for invalid external inputs
  * (e.g. invalid system call arguments, or invalid data coming from
@@ -50,6 +46,7 @@
 #define __WARN() do {                                                      \
         fprintf(stderr, "WARNING: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
     } while (0)
+
 #define __WARN_printf(arg...) do {              \
         vfprintf(stderr, arg);                  \
     } while (0)

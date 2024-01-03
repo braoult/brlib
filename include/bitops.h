@@ -1,6 +1,6 @@
-/* bits.h - bits functions.
+/* bitops.h - bits functions.
  *
- * Copyright (C) 2021-2022 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -44,6 +44,26 @@ void print_bitops_impl(void);
 /* count set bits:  10101000 -> 3
  *                  ^ ^ ^
  */
+#if __has_builtin(__builtin_popcountll)
+#define ___popcount64_native(n)  __builtin_popcountll(n)
+#endif
+#if __has_builtin(__builtin_popcount)
+#define ___popcount32_native(n)  __builtin_popcount(n)
+#endif
+#define ___popcount_emulated(n)  ({     \
+    int ___count = 0;                   \
+    while (n) {                         \
+        ___count++;                     \
+        n &= (n - 1);                   \
+    }                                   \
+    ___count; })
+
+#ifdef ___popcount64_native
+#define ppcount64(n) ___popcount64_native(n)
+#else
+#define ppcount64(n) ___popcount_emulated(n)
+#endif
+
 static __always_inline int popcount64(u64 n)
 {
 #   if __has_builtin(__builtin_popcountll)

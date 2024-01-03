@@ -1,6 +1,6 @@
 /* pjwhash.c - PJW hash function.
  *
- * Copyright (C) 2021-2022 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -12,9 +12,6 @@
  */
 
 #define _pjw_inline extern
-
-//#include "bits.h"
-//extern unsigned int  pjwhash (const void* key, uint length);
 
 #include "pjwhash.h"
 #include "pjwhash-inline.h"
