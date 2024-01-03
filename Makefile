@@ -1,6 +1,6 @@
 # brlib Makefile - GNU make only
 #
-# Copyright (C) 2021-2023 Bruno Raoult ("br")
+# Copyright (C) 2021-2024 Bruno Raoult ("br")
 # Licensed under the GNU General Public License v3.0 or later.
 # Some rights reserved. See COPYING.
 #
@@ -38,8 +38,8 @@ DLIB      := $(addsuffix .so, $(LIBDIR)/lib$(LIB))          # dynamic lib
 DEP_FN    := $(SRC_FN) $(LIBSRC_FN)
 DEP       := $(addprefix $(DEPDIR)/,$(DEP_FN:.c=.d))
 
-TESTSRC   := $(wildcard $(TESTDIR)/*.c)
-TEST_FN   := $(notdir $(TESTSRC))
+TEST      := $(wildcard $(TESTDIR)/*.c)
+TEST_FN   := $(notdir $(TEST))
 BIN       := $(addprefix $(BINDIR)/,$(TEST_FN:.c=))
 
 ##################################### emacs projectile/ccls dirs & files
@@ -51,7 +51,7 @@ CCLSFILE  := .ccls
 CCLSCMDS  := compile_commands.json
 
 ##################################### pre-processor flags
-CPPFLAGS  := -I$(INCDIR)
+CPPFLAGS  := -I $(INCDIR)
 #CPPFLAGS  += -DDEBUG                                       # global
 #CPPFLAGS  += -DDEBUG_DEBUG_C                               # log() funcs debug
 CPPFLAGS  += -DDEBUG_DEBUG                                  # activate logs funcs
@@ -80,16 +80,17 @@ CFLAGS    := $(strip $(CFLAGS))
 ##################################### archiver/linker/dependency flags
 ARFLAGS   := rcs
 LDFLAGS   := -L$(LIBDIR)
+LIBS      := -l$(LIB)
 DEPFLAGS   = -MMD -MP -MF $(DEPDIR)/$*.d
 
 ##################################### General targets
-.PHONY: all compile clean cleanall cleanallall
+.PHONY: all compile test clean cleanall cleanallall ccls bear
 
 all: libs
 
 compile: objs
 
-test: testbins
+test: tests
 
 clean: cleandep cleanobj cleanlib cleanbin
 
@@ -100,7 +101,7 @@ cleanallall: cleanall cleanemacs
 # setup emacs projectile/ccls
 emacs: emacs-setup
 # update compile-commands.json
-ccls: $(CCLSCMDS)
+ccls bear: $(CCLSCMDS)
 
 ##################################### cleaning functions
 # rmfiles - deletes a list of files in a directory if they exist.
@@ -205,16 +206,18 @@ $(SLIB): $(OBJ) | $(LIBDIR)
 	@$(AR) $(ARFLAGS) $@ $? > /dev/null
 
 ##################################### tests
-.PHONY: testbins cleanbin cleanbindir
+.PHONY: tests cleanbin cleanbindir
 
-testbins: $(BIN)
-	echo $^
+tests: libs $(BIN)
 
 cleanbin:
 	$(call rmfiles,$(TARGET),binary)
 
 cleanbindir:
 	$(call rmdir,$(BINDIR),binaries)
+
+$(BINDIR)/%: $(TESTDIR)/%.c | $(BINDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(LDFLAGS) $(LIBS) -o $@
 
 ##################################### pre-processed (.i) and assembler (.s) output
 %.i: %.c

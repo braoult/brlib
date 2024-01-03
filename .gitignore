@@ -1,5 +1,8 @@
 compile_commands.json
 core
+/.ccls-cache/
+/test/test/
+/test/cutest/
 # created when building
 /bin/
 /obj/
