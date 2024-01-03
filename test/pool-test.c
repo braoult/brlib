@@ -1,6 +1,9 @@
 #include <stdio.h>
-#include "bits.h"
+#include <stdlib.h>
+
+#include "br.h"
 #include "pool.h"
+#include "debug.h"
 
 struct d {
     u16 data1;
@@ -19,7 +22,7 @@ int main(int ac, char**av)
     char ccur='z';
     struct d *elt;
 
-    debug_init(3);
+    debug_init(3, stderr, true);
     log_f(1, "%s: sizeof(d)=%lu sizeof(*d)=%lu off=%lu\n", *av, sizeof(elt),
           sizeof(*elt), offsetof(struct d, list));
 
