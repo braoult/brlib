@@ -1,6 +1,7 @@
+
 /* debug.c - debug/log management
  *
- * Copyright (C) 2021-2023 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -26,10 +27,6 @@ static int level = 0;                             /* output log when < level */
 static int flush = false;                         /* force flush after logs */
 static FILE *stream = NULL;                       /* stream to use */
 
-/**
- * debug_level_set() - set debug level.
- * @_level: debug level (integer).
- */
 void debug_level_set(int _level)
 {
     level = _level;
@@ -38,10 +35,6 @@ void debug_level_set(int _level)
 #   endif
 }
 
-/**
- * debug_level_get() - get debug level.
- * @return: current level debug (integer).
- */
 int debug_level_get(void)
 {
     return level;
@@ -87,14 +80,6 @@ long long debug_timer_elapsed(void)
     return (timer.tv_sec * NANOSEC + timer.tv_nsec) - timer_start;
 }
 
-/**
- * debug() - log function
- * @lev: log level
- * @timestamp: boolean, print timestamp if true
- * @indent: indent level (2 spaces each)
- * @src: source file/func name (or NULL)
- * @line: line number
- */
 void debug(int lev, bool timestamp, int indent, const char *src,
            int line, const char *fmt, ...)
 {

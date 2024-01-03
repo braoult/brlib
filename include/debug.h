@@ -1,6 +1,6 @@
 /* debug.h - debug/log management.
  *
- * Copyright (C) 2021-2023 Bruno Raoult ("br")
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
  * Some rights reserved. See COPYING.
  *
@@ -16,7 +16,6 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 #include <br.h>
 
@@ -27,12 +26,64 @@
 
 #ifdef DEBUG_DEBUG
 
-void debug_init(int level, FILE *stream, bool flush);
+/**
+ * debug_level_set - get debug level.
+ * @level: integer debug level.
+ *
+ * @Return: void.
+ */
 void debug_level_set(int level);
+
+/**
+ * debug_level_get - get debug level.
+ *
+ * @Return: current level debug (integer).
+ */
 int debug_level_get(void);
+
+/**
+ * debug_stream_set - set debug output stream.
+ * @stream: (FILE *) output stream
+ *
+ * @Return: void.
+ */
 void debug_stream_set(FILE *stream);
-long long debug_timer_elapsed(void);
+
+/**
+ * debug_flush_set - set debug flush option.
+ * @flush: boolean, if true, flush after each output.
+ *
+ * @Return: void.
+ */
 void debug_flush_set(bool flush);
+
+/**
+ * debug_init - init debug module.
+ * @level: debug level (integer).
+ * @stream: (FILE *) output stream
+ * @flush: boolean, if true, flush after each output.
+ *
+ * @Return: void.
+ */
+void debug_init(int level, FILE *stream, bool flush);
+
+/**
+ * debug_timer_elapsed - get current elapsed debug timer value.
+ *
+ * @Return: long long, timer elapsed.
+ */
+long long debug_timer_elapsed(void);
+
+/**
+ * debug - log function.
+ * @level: log level
+ * @timestamp: boolean, print timestamp if true
+ * @indent: indent level (2 spaces each)
+ * @src: source file/func name (or NULL)
+ * @line: line number
+ *
+ * @Return: void.
+ */
 void _printf debug(int level, bool timestamp,
                    int indent, const char *src,
                    int line, const char *fmt, ...);
