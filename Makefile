@@ -208,7 +208,7 @@ $(SLIB): $(OBJ) | $(LIBDIR)
 ##################################### tests
 .PHONY: tests cleanbin cleanbindir
 
-tests: libs $(BIN)
+tests: $(BIN)
 
 cleanbin:
 	$(call rmfiles,$(TARGET),binary)
@@ -216,7 +216,7 @@ cleanbin:
 cleanbindir:
 	$(call rmdir,$(BINDIR),binaries)
 
-$(BINDIR)/%: $(TESTDIR)/%.c | $(BINDIR)
+$(BINDIR)/%: $(TESTDIR)/%.c libs | $(BINDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(LDFLAGS) $(LIBS) -o $@
 
 ##################################### pre-processed (.i) and assembler (.s) output

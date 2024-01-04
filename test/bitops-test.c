@@ -23,14 +23,14 @@ static void test_popcount()
     u32 t32[] = { 0x0,   0x88000101,           0xffffffff           };
     u64 t64[] = { 0x0ll, 0x8880000000000101LL, 0xffffffffffffffffll };
 
-    for (uint i = 0; i < sizeof(t32); ++i) {
+    for (uint i = 0; i < ARRAY_SIZE(t32); ++i) {
         printf("popcount 32 (%#x): ", t32[i]);
 #       ifdef ___popcount32_native
         printf("native:%d ", ___popcount32_native(t32[i]));
 #       endif
         printf("emulated:%d\n", ___popcount_emulated(t32[i]));
     }
-    for (uint i = 0; i < sizeof(t64); ++i) {
+    for (uint i = 0; i < ARRAY_SIZE(t64); ++i) {
         printf("popcount 64 (%#lx): ", t64[i]);
 #       ifdef ___popcount64_native
         printf("native:%d ", ___popcount64_native(t64[i]));
