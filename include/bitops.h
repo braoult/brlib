@@ -14,6 +14,24 @@
 #define _BITS_H
 
 #include "br.h"
+#include "bitops-emulated/generic-ctz.h"
+#include "bitops-emulated/generic-clz.h"
+
+/* determine which native builtins are available
+ */
+#if __has_builtin(__builtin_popcount)
+#   define HAS_POPCOUNT
+#endif
+#if __has_builtin(__builtin_ctz)
+#   define HAS_CTZ
+#endif
+#if __has_builtin(__builtin_clz)
+#   define HAS_CLZ
+#endif
+#if __has_builtin(__builtin_ffs)
+#   define HAS_FFS
+#endif
+
 
 /**
  * print_bitops_impl() - print bitops implementation.
@@ -33,459 +51,210 @@ void print_bitops_impl(void);
  * #endif
  */
 
-/*  lsb, msb: least/most significant bit: 10101000
- *                                msb = 7 ^   ^ lsb = 3
+/**
+ * lsb, msb: least/most significant bit: 10101000
+ *                               msb = 7 ^   ^ lsb = 3
+ *
  */
 #define lsb64(x) (ctz64(x))
 #define lsb32(x) (ctz32(x))
 #define msb64(x) (63 ^ clz64(x))
 #define msb32(x) (31 ^ clz32(x))
 
-/* count set bits:  10101000 -> 3
- *                  ^ ^ ^
+/**
+ * popcount32, popcout64 - count set bits:  10101000 -> 3
+ * @num: unsigned 32 or 64 bits integer.
+ *
  */
-#if __has_builtin(__builtin_popcountll)
-#define ___popcount64_native(n)  __builtin_popcountll(n)
+#if defined(HAS_POPCOUNT)
+#   define __popcount32_native(n) __builtin_popcount(n)
+#   define __popcount64_native(n) __builtin_popcountll(n)
+
+#   define popcount64(n) __popcount64_native(n)
+#   define popcount32(n) __popcount32_native(n)
+
+/* see ctz section below */
+#   define __ctz32_popcount(n) (popcount(n & -n) - 1)
+#   define __ctz64_popcount(n) (popcountll(n & -n) - 1)
+
+/* see ffs section below */
+#   define __ffs32_popcount(n) (__builtin_popcount((n) ^ ~-(n)))
+#   define __ffs64_popcount(n) (__builtin_popcountll((n) ^ ~-(n)))
+
 #endif
-#if __has_builtin(__builtin_popcount)
-#define ___popcount32_native(n)  __builtin_popcount(n)
-#endif
-#define ___popcount_emulated(n)  ({     \
+/* Brian Kernighan's algorithm - pretty efficient for likely sparse values
+ */
+#define __popcount_emulated(n)  ({      \
     int ___count = 0;                   \
     while (n) {                         \
         ___count++;                     \
         n &= (n - 1);                   \
     }                                   \
     ___count; })
-
-#ifdef ___popcount64_native
-#define ppcount64(n) ___popcount64_native(n)
-#else
-#define ppcount64(n) ___popcount_emulated(n)
+#if !defined(popcount32)
+#   define popcount32(n) __popcount_emulated(n)
+#endif
+#if !defined(popcount64)
+#   define popcount64(n) __popcount_emulated(n)
 #endif
 
-static __always_inline int popcount64(u64 n)
-{
-#   if __has_builtin(__builtin_popcountll)
-    return __builtin_popcountll(n);
-
-#   else
-    int count = 0;
-    while (n) {
-        count++;
-        n &= (n - 1);
-    }
-    return count;
-#   endif
-}
-
-static __always_inline int popcount32(u32 n)
-{
-#   if __has_builtin(__builtin_popcount)
-    return __builtin_popcount(n);
-
-#   else
-    int count = 0;
-    while (n) {
-        count++;
-        n &= (n - 1);
-    }
-    return count;
-#   endif
-}
-
-/* count trailing zeroes : 00101000 -> 3
- *                              ^^^
+/**
+ * ctz32, ctz64 - count trailing zeros: 00101000 -> 3
+ * @num: unsigned 32 or 64 bits integer.
+ *
+ * Not defined if no bit set, so check for non-zero before calling this.
+ * This is similat the FFS (First Find Set), which has FFS(0) = 0.
  */
-static __always_inline int ctz64(u64 n)
-{
-#   if __has_builtin(__builtin_ctzll)
-    return __builtin_ctzll(n);
+#if defined(HAS_CTZ)
+#   define __ctz32_native(n)  __builtin_ctz(n)
+#   define __ctz64_native(n)  __builtin_ctzll(n)
+#   define ctz32(n) __ctz32_native(n)
+#   define ctz64(n) __ctz64_native(n)
 
-#   elif __has_builtin(__builtin_clzll)
-    return __WORDSIZE - (__builtin_clzll(n & -n) + 1);
+/* see ffs section below */
+#   define __ffs32_ctz(n) ({ n? __builtin_ctz(n) + 1: 0; })
+#   define __ffs64_ctz(n) ({ n? __builtin_ctzll(n) + 1: 0; })
+#endif
+#if !defined(ctz32) && defined(__ctz32_popcount)
+#   define ctz32(n) __ctz32_popcount(n)
+#   define ctz64(n) __ctz64_popcount(n)
+#endif
+#if !defined(ctz32)
+#   define ctz32(n) __ctz32_emulated(n)
+#   define ctz64(n) __ctz64_emulated(n)
+#endif
 
-#   else
-    return popcount64((n & -n) - 1);
-#   endif
-}
-
-static __always_inline int ctz32(u32 n)
-{
-#   if __has_builtin(__builtin_ctz)
-    return __builtin_ctz(n);
-
-#   elif __has_builtin(__builtin_clz)
-    return __WORDSIZE - (__builtin_clz(n & -n) + 1);
-
-#   else
-    return popcount32((n & -n) - 1);
-#   endif
-}
-
-/* clz - count leading zeroes : 00101000 -> 2
- *                              ^^
+/**
+ * clz32, clz64 - count leading zeros: 00101000 -> 2
+ *
+ * @num: unsigned 32 or 64 bits integer.
+ *
+ * Not defined if no bit set, so check for non-zero before calling this.
  */
-static __always_inline int clz64(u64 n)
-{
-#   if __has_builtin(__builtin_clzll)
-    return __builtin_clzll(n);
+#if defined (HAS_CLZ)
+#   define __clz32_native(n)  __builtin_clz(n)
+#   define __clz64_native(n)  __builtin_clzll(n)
+#   define clz32(n) __clz32_native(n)
+#   define clz64(n) __clz64_native(n)
+#endif
+#if !defined(clz32)
+#   define clz32(n) __clz32_emulated(n)
+#   define clz64(n) __clz64_emulated(n)
+#endif
 
-#   else
-    u64 r, q;
-
-    r = (n > 0xFFFFFFFF) << 5; n >>= r;
-    q = (n > 0xFFFF)     << 4; n >>= q; r |= q;
-    q = (n > 0xFF  )     << 3; n >>= q; r |= q;
-    q = (n > 0xF   )     << 2; n >>= q; r |= q;
-    q = (n > 0x3   )     << 1; n >>= q; r |= q;
-    r |= (n >> 1);
-    return 64 - r - 1;
-#   endif
-}
-
-static __always_inline int clz32(u32 n)
-{
-#   if __has_builtin(__builtin_clz)
-    return __builtin_clz(n);
-
-#   else
-    u32 r, q;
-
-    r = (n > 0xFFFF)     << 4; n >>= r;
-    q = (n > 0xFF  )     << 3; n >>= q; r |= q;
-    q = (n > 0xF   )     << 2; n >>= q; r |= q;
-    q = (n > 0x3   )     << 1; n >>= q; r |= q;
-    r |= (n >> 1);
-    return 32 - r - 1;
-#   endif
-}
-
-/* fls - return one plus msb : 00101000 -> 6
- *                               ^
+/**
+ * ffs32, ffs64 - find first bit set, indexed from 0: 00101000 -> 4
+ * ffz32, ffz64 - find first bit unset, indexed from 0: 00101000 -> 0
+ * @num: unsigned 32 or 64 bits integer.
+ *
+ * ffs(n) is similar to ctz(n) + 1, but returns 0 if n == 0 (except
+ * for ctz version, where ffs(0) is undefined).
+ * ffz(n) is ffz(~n), with undefine value if n = 0.
  */
-static __always_inline int fls64(u64 n)
-{
-    if (!n)
-        return 0;
-    return 64 - clz64(n);
-}
+#if defined(HAS_FFS)
+#   define __ffs32_native(n)  __builtin_ffs(n)
+#   define __ffs64_native(n)  __builtin_ffsll(n)
+#   define ffs32(n) __ffs32_native(n)
+#   define ffs64(n) __ffs64_native(n)
+#endif
+#define __ffs32_emulated(n) (popcount32((n) ^ ~-(n)))
+#define __ffs64_emulated(n) (popcount64((n) ^ ~-(n)))
+#if !defined(ffs32) && defined(__ffs32_popcount)
+#   define ffs32(n) __ffs32_popcount(n)
+#   define ffs64(n) __ffs64_popcount(n)
+#endif
+#if !defined(ffs32) && defined(__ffs32_ctz)
+#   define ffs32(n) __ffs32_ctz(n)
+#   define ffs64(n) __ffs64_ctzll(n)
+#endif
+#if !defined(ffs32)
+#   define ffs32(n) __ffs32_emulated(n)
+#   define ffs64(n) __ffs64_emulated(n)
+#endif
+#define ffz32(n)  ffs32(~(n))
+#define ffz64(n)  ffs64(~(n))
 
-static __always_inline int fls32(u32 n)
-{
-    if (!n)
-        return 0;
-    return 32 - clz32(n);
-}
-
-/* ffs - return one plus lsb index:  00101000 -> 4
- *                                       ^
+/**
+ * fls32, fls64 - return one plus MSB index: 00101000 -> 6
+ * @num: unsigned 32 or 64 bits integer.
+ *
+ * Similar to nbits(n) - clz(n), but returns 0 if n == 0;
  */
-static __always_inline uint ffs64(u64 n)
-{
-#   if __has_builtin(__builtin_ffsll)
-    return __builtin_ffsll(n);
-
-#   elif __has_builtin(__builtin_ctzll)
-    if (n == 0)
-        return (0);
-    return __builtin_ctzll(n) + 1;
-
-#   else
-    return popcount64(n ^ ~-n);
-#   endif
-}
-
-static __always_inline uint ffs32(u32 n)
-{
-#   if __has_builtin(__builtin_ffs)
-    return __builtin_ffs(n);
-
-#   elif __has_builtin(__builtin_ctz)
-    if (n == 0)
-        return (0);
-    return __builtin_ctz(n) + 1;
-
-#   else
-    return popcount32(n ^ ~-n);
-#   endif
-}
+#define fls32(n) ((n)? 32 - clz32(n): 0)
+#define fls64(n) ((n)? 64 - clz64(n): 0)
 
 /* rolXX/rorXX are taken from kernel's <linux/bitops.h> are are:
  * SPDX-License-Identifier: GPL-2.0
  */
-
 /**
- * rol64 - rotate a 64-bit value left
- * @word: value to rotate
- * @shift: bits to roll
+ * rol8, rol16, rol32, rol64 - rotate left
+ * @num: unsigned 8, 16, 32 or 64 bits integer
+ * @n: bits to roll
  */
-static inline u64 rol64(u64 word, unsigned int shift)
-{
-        return (word << (shift & 63)) | (word >> ((-shift) & 63));
-}
+#define rol8(num, n)  ((num << (n &  7)) | (num >> ((-n) &  7)))
+#define rol16(num, n) ((num << (n & 15)) | (num >> ((-n) & 15)))
+#define rol32(num, n) ((num << (n & 31)) | (num >> ((-n) & 31)))
+#define rol64(num, n) ((num << (n & 63)) | (num >> ((-n) & 63)))
 
 /**
- * ror64 - rotate a 64-bit value right
- * @word: value to rotate
- * @shift: bits to roll
+ * ror8, ror16, ror32, ror64 - rotate right
+ * @num: unsigned 8, 16, 32 or 64 bits integer
+ * @n: bits to roll
  */
-static inline u64 ror64(u64 word, unsigned int shift)
-{
-        return (word >> (shift & 63)) | (word << ((-shift) & 63));
-}
+#define ror8(num, n)  ((num >> (n &  7)) | (num << ((-n) &  7)))
+#define ror16(num, n) ((num >> (n & 15)) | (num << ((-n) & 15)))
+#define ror32(num, n) ((num >> (n & 31)) | (num << ((-n) & 31)))
+#define ror64(num, n) ((num >> (n & 63)) | (num << ((-n) & 63)))
 
 /**
- * rol32 - rotate a 32-bit value left
- * @word: value to rotate
- * @shift: bits to roll
+ * ilog2 - log base 2
+ * @n: unsigned 32 or 64 bits integer.
  */
-static inline u32 rol32(u32 word, unsigned int shift)
-{
-        return (word << (shift & 31)) | (word >> ((-shift) & 31));
-}
+#define ilog2_32(n) (fls32(n) - 1)
+#define ilog2_64(n) (fls64(n) - 1)
 
 /**
- * ror32 - rotate a 32-bit value right
- * @word: value to rotate
- * @shift: bits to roll
- */
-static inline u32 ror32(u32 word, unsigned int shift)
-{
-        return (word >> (shift & 31)) | (word << ((-shift) & 31));
-}
-
-/**
- * rol16 - rotate a 16-bit value left
- * @word: value to rotate
- * @shift: bits to roll
- */
-static inline u16 rol16(u16 word, unsigned int shift)
-{
-        return (word << (shift & 15)) | (word >> ((-shift) & 15));
-}
-
-/**
- * ror16 - rotate a 16-bit value right
- * @word: value to rotate
- * @shift: bits to roll
- */
-static inline u16 ror16(u16 word, unsigned int shift)
-{
-        return (word >> (shift & 15)) | (word << ((-shift) & 15));
-}
-
-/**
- * rol8 - rotate an 8-bit value left
- * @word: value to rotate
- * @shift: bits to roll
- */
-static inline u8 rol8(u8 word, unsigned int shift)
-{
-        return (word << (shift & 7)) | (word >> ((-shift) & 7));
-}
-
-/**
- * ror8 - rotate an 8-bit value right
- * @word: value to rotate
- * @shift: bits to roll
- */
-static inline u8 ror8(u8 word, unsigned int shift)
-{
-        return (word >> (shift & 7)) | (word << ((-shift) & 7));
-}
-
-/**
- * __ilog2 - non-constant log of base 2 calculators
- * - the arch may override these in asm/bitops.h if they can be implemented
- *   more efficiently than using fls() and fls64()
- * - the arch is not required to handle n==0 if implementing the fallback
- */
-static __always_inline __attribute__((const))
-int __ilog2_u64(u64 n)
-{
-        return fls64(n) - 1;
-}
-
-static __always_inline __attribute__((const))
-int __ilog2_u32(u32 n)
-{
-        return fls32(n) - 1;
-}
-
-/**
- * is_power_of_2() - check if a value is a power of two
+ * is_pow2() - check if number is a power of two
  * @n: the value to check
  *
- * Determine whether some value is a power of two, where zero is
- * *not* considered a power of two.
- * Return: true if @n is a power of 2, otherwise false.
+ * Zero is *not* considered a power of two.
  */
-static inline __attribute__((const))
-bool is_power_of_2(unsigned long n)
-{
-        return (n != 0 && ((n & (n - 1)) == 0));
-}
+#define is_pow2(n) (n != 0 && (((n) & ((n) - 1)) == 0))
 
 /**
- * __roundup_pow_of_two() - round up to nearest power of two
- * @n: value to round up
- */
-static inline __attribute__((const))
-u64 __roundup_pow_of_two(u64 n)
-{
-        return 1UL << fls64(n - 1);
-}
-
-/**
- * __rounddown_pow_of_two() - round down to nearest power of two
- * @n: value to round down
- */
-static inline __attribute__((const)) u64 __rounddown_pow_of_two(u64 n)
-{
-        return 1UL << (fls64(n) - 1);
-}
-
-/**
- * ilog2 - log base 2 of 32-bit or a 64-bit unsigned value
- * @n: parameter
+ * bit_for_eachXX - iterate over an integer bits (0-indexed)
+ * bit_for_eachXX_ffs - iterate over an integer bits (1-indexed)
+ * @pos:  int used as current bit
+ * @tmp:  temp u64/u32 used as temporary storage
+ * @ul:   u32/u64 to loop over
  *
- * constant-capable log of base 2 calculation
- * - this can be used to initialise global variables from constant data, hence
- * the massive ternary operator construction
+ * Bits are 0-indexed from 0 with bit_for_each, and 1-indexed with
+ * bits_for_each_ffs.
  *
- * selects the appropriately-sized optimised version depending on sizeof(n)
- */
-#define ilog2(n)                        \
-(                                       \
-        __builtin_constant_p(n) ?       \
-        ((n) < 2 ? 0 :                  \
-         63 - __builtin_clzll(n)) :     \
-        (sizeof(n) <= 4) ?              \
-        __ilog2_u32(n) :                \
-        __ilog2_u64(n)                  \
- )
-
-/**
- * roundup_pow_of_two - round the given value up to nearest power of two
- * @n: parameter
- *
- * round the given value up to the nearest power of two
- * - the result is undefined when n == 0
- * - this can be used to initialise global variables from constant data
- */
-#define roundup_pow_of_two(n)                   \
-(                                               \
-        __builtin_constant_p(n) ? (             \
-                ((n) == 1) ? 1 :                \
-                (1UL << (ilog2((n) - 1) + 1))   \
-                                   ) :          \
-        __roundup_pow_of_two(n)                 \
- )
-
-/**
- * rounddown_pow_of_two - round the given value down to nearest power of two
- * @n: parameter
- *
- * round the given value down to the nearest power of two
- * - the result is undefined when n == 0
- * - this can be used to initialise global variables from constant data
- */
-#define rounddown_pow_of_two(n)                 \
-(                                               \
-        __builtin_constant_p(n) ? (             \
-                (1UL << ilog2(n))) :            \
-        __rounddown_pow_of_two(n)               \
- )
-
-static inline __attribute_const__ int __order_base_2(unsigned long n)
-{
-        return n > 1 ? ilog2(n - 1) + 1 : 0;
-}
-
-/**
- * order_base_2 - calculate the (rounded up) base 2 order of the argument
- * @n: parameter
- *
- * The first few values calculated by this routine:
- *  ob2(0) = 0
- *  ob2(1) = 0
- *  ob2(2) = 1
- *  ob2(3) = 2
- *  ob2(4) = 2
- *  ob2(5) = 3
- *  ... and so on.
- */
-#define order_base_2(n)                         \
-(                                               \
-        __builtin_constant_p(n) ? (             \
-            ((n) == 0 || (n) == 1) ?            \
-            0 :                                 \
-            ilog2((n) - 1) + 1) :               \
-        __order_base_2(n)                       \
-)
-
-static inline __attribute__((const)) int __bits_per(unsigned long n)
-{
-        if (n < 2)
-            return 1;
-        if (is_power_of_2(n))
-            return order_base_2(n) + 1;
-        return order_base_2(n);
-}
-
-/**
- * bits_per - calculate the number of bits required for the argument
- * @n: parameter
- *
- * This is constant-capable and can be used for compile time
- * initializations, e.g bitfields.
- *
- * The first few values calculated by this routine:
- * bf(0) = 1
- * bf(1) = 1
- * bf(2) = 2
- * bf(3) = 2
- * bf(4) = 3
- * ... and so on.
- */
-#define bits_per(n)                             \
-(                                               \
-        __builtin_constant_p(n) ? (             \
-            ((n) == 0 || (n) == 1) ?            \
-            1 :                                 \
-            ilog2(n) + 1 :                      \
-            __bits_per(n)                       \
-)
-
-/**
- * bit_for_each - iterate over an u64/u32 bits
- * @pos:        an int used as current bit
- * @tmp:        a temp u64/u32 used as temporary storage
- * @ul:         the u64/u32 to loop over
- *
- * Usage:
- * u64 u=139, _t;     //  u=b10001011
+ * Example:
+ * u64 u=139, _t;           // u=b10001011
  * int cur;
  * bit_for_each64(cur, _t, u) {
  *     printf("%d\n", cur);
  * }
- * This will display the position of each bit set in ul: 1, 2, 4, 8
+ * This will display the position of each bit set in ul: 0, 1, 3, 7
  *
- * I should probably re-think the implementation...
  */
-#define bit_for_each64(pos, tmp, ul)                                  \
-    for (tmp = ul, pos = ctz64(tmp); tmp; tmp ^= 1UL << pos, pos = ctz64(tmp))
-
-#define bit_for_each32(pos, tmp, ul)                                  \
-    for (tmp = ul, pos = ctz32(tmp); tmp; tmp ^= 1U << pos, pos = ctz32(tmp))
-
-/** or would it be more useful (counting bits from zero instead of 1) ?
- */
-#define bit_for_each64_1(pos, tmp, ul)                                    \
-    for (tmp = ul, pos = ffs64(tmp); tmp; tmp &= (tmp - 1),  pos = ffs64(tmp))
-
-#define bit_for_each32_1(pos, tmp, ul)                                    \
-    for (tmp = ul, pos = ffs32(tmp); tmp; tmp &= (tmp - 1),  pos = ffs32(tmp))
+#define bit_for_each32(pos, tmp, ul)                 \
+    for (tmp = ul, pos = ctz32(tmp);                 \
+         tmp;                                        \
+         tmp ^= 1U << pos, pos = ctz32(tmp))
+#define bit_for_each64(pos, tmp, ul)                 \
+    for (tmp = ul, pos = ctz64(tmp);                 \
+         tmp;                                        \
+         tmp ^= 1UL << pos, pos = ctz64(tmp))
+#define bit_for_each64_ffs(pos, tmp, ul)             \
+    for (tmp = ul, pos = ffs64(tmp);                 \
+         tmp;                                        \
+         tmp &= (tmp - 1),  pos = ffs64(tmp))
+#define bit_for_each32_ffs(pos, tmp, ul)             \
+    for (tmp = ul, pos = ffs32(tmp);                 \
+         tmp;                                        \
+         tmp &= (tmp - 1),  pos = ffs32(tmp))
 
 #endif  /* _BITS_H */

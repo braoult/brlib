@@ -3,6 +3,7 @@ core
 /.ccls-cache/
 /test/test/
 /test/cutest/
+/tmp/
 # created when building
 /bin/
 /obj/
