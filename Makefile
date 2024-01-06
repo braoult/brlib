@@ -42,12 +42,6 @@ TEST      := $(wildcard $(TESTDIR)/*.c)
 TEST_FN   := $(notdir $(TEST))
 BIN       := $(addprefix $(BINDIR)/,$(TEST_FN:.c=))
 
-##################################### emacs projectile/ccls dirs & files
-PRJROOT   := .projectile
-EMACSLSP  := .dir-locals.el
-
-CCLSROOT  := .ccls-root
-CCLSFILE  := .ccls
 CCLSCMDS  := compile_commands.json
 
 ##################################### pre-processor flags
@@ -84,24 +78,30 @@ LIBS      := -l$(LIB)
 DEPFLAGS   = -MMD -MP -MF $(DEPDIR)/$*.d
 
 ##################################### General targets
-.PHONY: all compile test clean cleanall cleanallall ccls bear
+.PHONY: all libs compile test emacs ccls bear clean cleanall cleanallall
 
+# default: build libraries
 all: libs
 
-compile: objs
+# default: build libraries
+libs: $(DLIB) $(SLIB)
 
-test: tests
+# build objects
+compile: $(OBJ)
 
-clean: cleandep cleanobj cleanlib cleanbin
-
-cleanall: clean cleandepdir cleanobjdir cleanlibdir cleanbindir
-
-cleanallall: cleanall cleanemacs
+# build test binaries
+test: $(BIN)
 
 # setup emacs projectile/ccls
-emacs: emacs-setup
+emacs: $(PRJROOT) $(EMACSLSP)
+
 # update compile-commands.json
 ccls bear: $(CCLSCMDS)
+
+# cleanup - need to think about a better system :-)
+clean: cleandep cleanobj cleanlib cleanbin
+cleanall: clean cleandepdir cleanobjdir cleanlibdir cleanbindir
+cleanallall: cleanall cleanemacs
 
 ##################################### cleaning functions
 # rmfiles - deletes a list of files in a directory if they exist.
@@ -170,9 +170,7 @@ cleandepdir:
 	@#[ -d $(DEPDIR) ] && echo cleaning depend files && $(RM) -f $(DEP) || true
 
 ##################################### objects
-.PHONY: objs cleanobj cleanobjdir
-
-objs: $(OBJ)
+.PHONY: cleanobj cleanobjdir
 
 cleanobj:
 	$(call rmfiles,$(OBJ),brlib object)
@@ -185,9 +183,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(DEPDIR)
 	$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 ##################################### brlib libraries
-.PHONY: libs cleanlib cleanlibdir
-
-libs: $(DLIB) $(SLIB)
+.PHONY: cleanlib cleanlibdir
 
 cleanlib:
 	$(call rmfiles,$(DLIB) $(SLIB),library)
@@ -205,13 +201,11 @@ $(SLIB): $(OBJ) | $(LIBDIR)
 	@echo "building static library ($@)."
 	@$(AR) $(ARFLAGS) $@ $? > /dev/null
 
-##################################### tests
-.PHONY: tests cleanbin cleanbindir
-
-tests: $(BIN)
+##################################### testing
+.PHONY: cleanbin cleanbindir
 
 cleanbin:
-	$(call rmfiles,$(TARGET),binary)
+	$(call rmfiles,$(BIN),binary)
 
 cleanbindir:
 	$(call rmdir,$(BINDIR),binaries)
@@ -228,32 +222,22 @@ $(BINDIR)/%: $(TESTDIR)/%.c libs | $(BINDIR)
 	@echo generating $@
 	@$(CC) -S -fverbose-asm $(CPPFLAGS) $(CFLAGS) $< -o $@
 
-##################################### Emacs
-.PHONY: emacs-setup cleanemacs
+##################################### Emacs & LSP (ccls)
+.PHONY: cleanemacs cleanccls
 
-emacs-setup: $(PRJROOT) $(EMACSLSP)
+#EMACSLSP   := .dir-locals.el
+CCLSFILES  := .projectile .ccls .ccls-root
+CCLSCACHE  := .ccls-cache
 
 cleanemacs:
-	$(call rmfiles, $(PRJROOT) $(EMACSLSP), Emacs);
+	$(call rmfiles, $(PRJROOT) $(EMACSLSP), Emacs/ccls);
 
-$(PRJROOT) $(EMACSLSP):
-	@if [[ $(@) = $(PRJROOT) ]] ;                           \
-	then                                                    \
-		echo "creating Emacs's projectile root file." ; \
-	else                                                    \
-		echo "creating Emacs's ccls root file." ;       \
-	fi
+$(CCLSFILES):
+	printf "creating Emacs dot-files.\n"
 	@$(TOUCH) $@
-
-##################################### LSP (ccls)
-.PHONY: cleanccls
 
 cleanccls:
-	$(call rmfiles, $(CCLSROOT), ccls);
-
-$(CCLSROOT):
-	echo "creating ccls root file."
-	@$(TOUCH) $@
+	$(call rmfiles, $(CCLSFILES), ccls);
 
 # generate compile_commands.json.
 # TODO: add includes and Makefile dependencies.
@@ -262,11 +246,7 @@ $(CCLSROOT):
 # maybe run cleanobj cleanlibobj in commands ?
 $(CCLSCMDS): cleanobj $(SRC) | $(CCLSROOT)
 	@echo "Generating ccls compile commands file ($@)."
-	@$(BEAR) -- make compile
-
-#.PHONY: bear
-#bear: cleanobj cleanlibobj Makefile | $(CCLSROOT)
-#    @$(BEAR) -- make compile
+	@$(BEAR) -- make test
 
 ##################################### valgrind (mem check)
 .PHONY: memcheck
