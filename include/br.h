@@ -88,6 +88,7 @@ typedef signed char schar;
  */
 #define __unused             __attribute__((__unused__))
 #define __used               __attribute__((__used__))
+#define __const              __attribute__((__const__))
 
 /* see https://lkml.org/lkml/2018/3/20/845 for explanation of this monster
  */

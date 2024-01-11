@@ -1,13 +1,17 @@
-* brlib - A small personal C library
+#+title: brlib - A small personal C library
+#+OPTIONS: toc:nil
+#+OPTIONS: num:2
+#+startup: num
+
 ** License
-SPDX-License-Identifier: GPL-3.0-or-later <https://spdx.org/licenses/GPL-3.0-or-later.html>
+~SPDX-License-Identifier: GPL-3.0-or-later <https://spdx.org/licenses/GPL-3.0-or-later.html>~~
 
 This work is, with exceptions below, Copyright (C) 2021-2024 Bruno Raoult
 ("br"), and licensed under the GNU General Public License v3.0 or later.
 Some rights reserved. See COPYING.
 
-*** The licence exceptions are:
-**** Cutest testing framework.
+*The licence exceptions are:**
+_Cutest testing framework.__
 You can find the original work on
 [[https://sourceforge.net/projects/cutest/files/cutest/][sourceforge]].
 
@@ -16,17 +20,14 @@ See [[test/cutest/license.txt][license local copy]] or
 <https://spdx.org/licenses/Zlib.html>.
 
 ** Installation:
-*** clone repository
-**** user...
+*** user...
 #+BEGIN_EXAMPLE
 $ git clone https://git.raoult.com:bruno/brlib.git
-#+END_EXAMPLE
 or
-#+BEGIN_EXAMPLE
 $ git clone https://github.com/braoult/brlib.git
 #+END_EXAMPLE
 
-**** ... or developer
+*** ...or developer
 #+BEGIN_EXAMPLE
 $ git clone git@git.raoult.com:bruno/brlib.git
 $ cd brlib

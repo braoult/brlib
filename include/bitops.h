@@ -17,6 +17,10 @@
 #include "bitops-emulated/generic-ctz.h"
 #include "bitops-emulated/generic-clz.h"
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
 /* determine which native builtins are available
  */
 #if __has_builtin(__builtin_popcount)
@@ -41,10 +45,6 @@
  */
 void print_bitops_impl(void);
 
-#ifndef __has_builtin
-#define __has_builtin(x) 0
-#endif
-
 /* no plan to support 32bits for now...
  * #if __WORDSIZE != 64
  * #error "Only 64 bits word size supported."
@@ -52,8 +52,8 @@ void print_bitops_impl(void);
  */
 
 /**
- * lsb, msb: least/most significant bit: 10101000
- *                               msb = 7 ^   ^ lsb = 3
+ * lsb, msb: 0-indexed least/most significant bit: 10101000
+ *                                         msb = 7 ^   ^ lsb = 3
  *
  */
 #define lsb64(x) (ctz64(x))
@@ -63,7 +63,7 @@ void print_bitops_impl(void);
 
 /**
  * popcount32, popcout64 - count set bits:  10101000 -> 3
- * @num: unsigned 32 or 64 bits integer.
+ * @n: unsigned 32 or 64 bits integer.
  *
  */
 #if defined(HAS_POPCOUNT)
@@ -100,7 +100,7 @@ void print_bitops_impl(void);
 
 /**
  * ctz32, ctz64 - count trailing zeros: 00101000 -> 3
- * @num: unsigned 32 or 64 bits integer.
+ * @n: unsigned 32 or 64 bits integer.
  *
  * Not defined if no bit set, so check for non-zero before calling this.
  * This is similat the FFS (First Find Set), which has FFS(0) = 0.
@@ -127,7 +127,7 @@ void print_bitops_impl(void);
 /**
  * clz32, clz64 - count leading zeros: 00101000 -> 2
  *
- * @num: unsigned 32 or 64 bits integer.
+ * @n: unsigned 32 or 64 bits integer.
  *
  * Not defined if no bit set, so check for non-zero before calling this.
  */
@@ -144,8 +144,8 @@ void print_bitops_impl(void);
 
 /**
  * ffs32, ffs64 - find first bit set, indexed from 0: 00101000 -> 4
- * ffz32, ffz64 - find first bit unset, indexed from 0: 00101000 -> 0
- * @num: unsigned 32 or 64 bits integer.
+ * ffz32, ffz64 - find first bit unset, indexed from 0: 00101010 -> 2
+ * @n: unsigned 32 or 64 bits integer.
  *
  * ffs(n) is similar to ctz(n) + 1, but returns 0 if n == 0 (except
  * for ctz version, where ffs(0) is undefined).
@@ -176,20 +176,18 @@ void print_bitops_impl(void);
 
 /**
  * fls32, fls64 - return one plus MSB index: 00101000 -> 6
- * @num: unsigned 32 or 64 bits integer.
+ * @n: unsigned 32 or 64 bits integer.
  *
  * Similar to nbits(n) - clz(n), but returns 0 if n == 0;
  */
 #define fls32(n) ((n)? 32 - clz32(n): 0)
 #define fls64(n) ((n)? 64 - clz64(n): 0)
 
-/* rolXX/rorXX are taken from kernel's <linux/bitops.h> are are:
- * SPDX-License-Identifier: GPL-2.0
- */
-/**
- * rol8, rol16, rol32, rol64 - rotate left
+/*
+ * rol32, rot64 - rotate left
  * @num: unsigned 8, 16, 32 or 64 bits integer
  * @n: bits to roll
+ * See: https://stackoverflow.com/a/31488147/3079831
  */
 #define rol8(num, n)  ((num << (n &  7)) | (num >> ((-n) &  7)))
 #define rol16(num, n) ((num << (n & 15)) | (num >> ((-n) & 15)))
@@ -207,11 +205,13 @@ void print_bitops_impl(void);
 #define ror64(num, n) ((num >> (n & 63)) | (num << ((-n) & 63)))
 
 /**
- * ilog2 - log base 2
+ * ilog2_32, ilog2_64 - log base 2
  * @n: unsigned 32 or 64 bits integer.
+ *
+ * Undefine value if n = 0.
  */
-#define ilog2_32(n) (fls32(n) - 1)
-#define ilog2_64(n) (fls64(n) - 1)
+#define ilog2_32(n) (msb32(n))
+#define ilog2_64(n) (msb64(n))
 
 /**
  * is_pow2() - check if number is a power of two

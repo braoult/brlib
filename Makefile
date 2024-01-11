@@ -204,6 +204,8 @@ $(SLIB): $(OBJ) | $(LIBDIR)
 ##################################### testing
 .PHONY: cleanbin cleanbindir
 
+CUTESTSRC  := $(TESTDIR)/cutest/CuTest.c
+
 cleanbin:
 	$(call rmfiles,$(BIN),binary)
 
@@ -211,7 +213,7 @@ cleanbindir:
 	$(call rmdir,$(BINDIR),binaries)
 
 $(BINDIR)/%: $(TESTDIR)/%.c libs | $(BINDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(LDFLAGS) $(LIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(CUTESTSRC) $(LDFLAGS) $(LIBS) -o $@
 
 ##################################### pre-processed (.i) and assembler (.s) output
 %.i: %.c
