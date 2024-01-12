@@ -226,7 +226,7 @@ void print_bitops_impl(void);
  * bit_for_eachXX_ffs - iterate over an integer bits (1-indexed)
  * @pos:  int used as current bit
  * @tmp:  temp u64/u32 used as temporary storage
- * @ul:   u32/u64 to loop over
+ * @u:    u32/u64 to loop over
  *
  * Bits are 0-indexed from 0 with bit_for_each, and 1-indexed with
  * bits_for_each_ffs.
@@ -240,16 +240,16 @@ void print_bitops_impl(void);
  * This will display the position of each bit set in ul: 0, 1, 3, 7
  *
  */
-#define bit_for_each32(pos, tmp, ul)                 \
-    for (tmp = ul, pos = ctz32(tmp);                 \
+#define bit_for_each32(pos, tmp, u)                  \
+    for (tmp = u, pos = ctz32(tmp);                  \
          tmp;                                        \
          tmp ^= 1U << pos, pos = ctz32(tmp))
 #define bit_for_each64(pos, tmp, ul)                 \
     for (tmp = ul, pos = ctz64(tmp);                 \
          tmp;                                        \
          tmp ^= 1UL << pos, pos = ctz64(tmp))
-#define bit_for_each64_ffs(pos, tmp, ul)             \
-    for (tmp = ul, pos = ffs64(tmp);                 \
+#define bit_for_each64_ffs(pos, tmp, u)              \
+    for (tmp = u, pos = ffs64(tmp);                  \
          tmp;                                        \
          tmp &= (tmp - 1),  pos = ffs64(tmp))
 #define bit_for_each32_ffs(pos, tmp, ul)             \

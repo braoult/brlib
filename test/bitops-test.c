@@ -138,22 +138,22 @@ static void cutest_ilog(CuTest *tc)
 {
     for (uint i = 0; i < ARRAY_SIZE(test32_1); ++i) {
         if (!test32_1[i].t32) {
-            printf("ilog2_32 t=%#x skipped\n", test32_1[i].t32);
+            //printf("ilog2_32 t=%#x skipped\n", test32_1[i].t32);
             continue;
         }
         int res = ilog2_32(test32_1[i].t32);
-        printf("ilog2_32_n t=%#x r=%d e=%d\n", test32_1[i].t32,
-               res, test32_1[i].ilog2);
+        //printf("ilog2_32_n t=%#x r=%d e=%d\n", test32_1[i].t32,
+        //       res, test32_1[i].ilog2);
         CuAssertIntEquals(tc, test32_1[i].ilog2, res);
     }
     for (uint i = 0; i < ARRAY_SIZE(test64_1); ++i) {
         if (!test64_1[i].t64) {
-            printf("ilog2_32 t=%#llx skipped\n", test64_1[i].t64);
+            //printf("ilog2_32 t=%#llx skipped\n", test64_1[i].t64);
             continue;
         }
         int res = ilog2_64(test64_1[i].t64);
-        printf("ilog2_64_n t=%#llx r=%d e=%d\n", test64_1[i].t64,
-               res, test64_1[i].ilog2);
+        //printf("ilog2_64_n t=%#llx r=%d e=%d\n", test64_1[i].t64,
+        //       res, test64_1[i].ilog2);
         CuAssertIntEquals(tc, test64_1[i].ilog2, res);
     }
 }
@@ -163,13 +163,25 @@ struct test32_2 {
     u32 arg;
     u32 rol;
     u32 ror;
+    struct {
+        int size;
+        uchar bfe[32];
+    };
 } test32_2[] = {
-    { 0x00000000, 0,  0, 0  },
-    { 0x00000000, 1,  0, 0  },
-    { 0x10000001, 2,  0x40000004, 0x44000000 },
-    { 0x80000008, 3,  0x00000044, 0x10000001 },
-    { 0x71800718, 8,  0x80071871, 0x18718007 },
-    { 0x07eeeef7, 4,  0x7eeeef70, 0x707eeeef },
+    { 0x00000000, 0,  0, 0,
+      {  0, { 0 }  } },
+    { 0x00000000, 1,  0, 0,
+      {  0, { 0 }  } },
+    { 0x10000001, 2,  0x40000004, 0x44000000,
+      {  2, { 0, 28 } } },
+    { 0x80000008, 3,  0x00000044, 0x10000001,
+      {  2, { 3, 31 } } },
+    { 0x71800718, 8,  0x80071871, 0x18718007,
+      { 10, { 3, 4, 8, 9, 10, 23, 24, 28, 29, 30 } } },
+    { 0x07eeeef7, 4,  0x7eeeef70, 0x707eeeef,
+      { 22, { 0, 1, 2, 4, 5, 6, 7, 9, 10,
+            11, 13, 14, 15, 17, 18, 19,
+            21, 22, 23, 24, 25, 26 } } },
 };
 
 struct test64_2 {
@@ -177,13 +189,28 @@ struct test64_2 {
     u32 arg;
     u64 rol;
     u64 ror;
+    struct {
+        int size;
+        uchar bfe[64];
+    };
 } test64_2[] = {
-    { 0x0000000000000000, 0,  0, 0  },
-    { 0x0000000000000000, 1,  0, 0  },
-    { 0x1000000110000001, 2,  0x4000000440000004, 0x4400000044000000 },
-    { 0x8000000880000008, 3,  0x0000004400000044, 0x1000000110000001 },
-    { 0x7180071871800718, 8,  0x8007187180071871, 0x1871800718718007 },
-    { 0x07eeeef707eeeef7, 4,  0x7eeeef707eeeef70, 0x707eeeef707eeeef },
+    { 0x0000000000000000, 0,  0, 0,
+      {  0, { 0 }  } },
+    { 0x0000000000000000, 1,  0, 0,
+      {  0, { 0 }  } },
+    { 0x1000000110000001, 2,  0x4000000440000004, 0x4400000044000000,
+      {  4, { 0, 28, 32, 60 } } },
+    { 0x8000000880000008, 3,  0x0000004400000044, 0x1000000110000001,
+      {  4, { 3, 31, 35, 63 } } },
+    { 0x7180071871800718, 8,  0x8007187180071871, 0x1871800718718007,
+      { 20, { 3, 4, 8, 9, 10, 23, 24, 28, 29, 30,
+            35, 36, 40, 41, 42, 55, 56, 60, 61, 62 } } },
+    { 0x07eeeef707eeeef7, 4,  0x7eeeef707eeeef70, 0x707eeeef707eeeef,
+      { 44, { 0, 1, 2, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19,
+            21, 22, 23, 24, 25, 26,
+            32, 33, 34, 36, 37, 38, 39, 41, 42, 43, 45, 46, 47, 49, 50, 51,
+            53, 54, 55, 56, 57, 58 } } },
+
 };
 
 static void cutest_rol(CuTest *tc)
@@ -218,7 +245,53 @@ static void cutest_ror(CuTest *tc)
     }
 }
 
-#define MAXLOOPS 8
+static void cutest_bfe(CuTest *tc)
+{
+    char s[64];
+
+    for (uint i = 0; i < ARRAY_SIZE(test32_2); ++i) {
+        u32 tmp;
+        int cur, nb = 0;
+        char bfe_ffs[32];
+
+        /* create bit_for_each32_ffs values */
+        for (int j = 0; j < test32_2[i].size; ++j)
+            bfe_ffs[j] = test32_2[i].bfe[j] + 1;
+
+        bit_for_each32(cur, tmp, test32_2[i].t32) {
+            s[nb++] = cur;
+        }
+        CuAssertIntEquals(tc, test32_2[i].size, nb);
+        CuAssertMemEquals(tc, test32_2[i].bfe, s, test32_2[i].size);
+        nb = 0;
+        bit_for_each32_ffs(cur, tmp, test32_2[i].t32) {
+            s[nb++] = cur;
+        }
+        CuAssertMemEquals(tc, bfe_ffs, s, test32_2[i].size);
+    }
+
+    for (uint i = 0; i < ARRAY_SIZE(test64_2); ++i) {
+        u64 tmp;
+        int cur, nb = 0;
+        char bfe_ffs[64];
+
+        /* create bit_for_each64_ffs values */
+        for (int j = 0; j < test64_2[i].size; ++j)
+            bfe_ffs[j] = test64_2[i].bfe[j] + 1;
+
+        bit_for_each64(cur, tmp, test64_2[i].t64) {
+            s[nb++] = cur;
+        }
+        //printf("\n64 nb=%d size=%d\n", nb, test64_2[i].size);
+        CuAssertIntEquals(tc, test64_2[i].size, nb);
+        CuAssertMemEquals(tc, test64_2[i].bfe, s, test64_2[i].size);
+        nb = 0;
+        bit_for_each64_ffs(cur, tmp, test64_2[i].t64) {
+            s[nb++] = cur;
+        }
+        CuAssertMemEquals(tc, bfe_ffs, s, test64_2[i].size);
+    }
+}
 
 static CuSuite *bitops_GetSuite()
 {
@@ -233,6 +306,7 @@ static CuSuite *bitops_GetSuite()
 
     SUITE_ADD_TEST(suite, cutest_rol);
     SUITE_ADD_TEST(suite, cutest_ror);
+    SUITE_ADD_TEST(suite, cutest_bfe);
     return suite;
 }
 
@@ -240,7 +314,6 @@ static void RunAllTests(void)
 {
     CuString *output = CuStringNew();
     CuSuite* suite = CuSuiteNew();
-
     CuSuiteAddSuite(suite, bitops_GetSuite());
 
     CuSuiteRun(suite);
