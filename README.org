@@ -20,16 +20,16 @@ See [[test/cutest/license.txt][license local copy]] or
 <https://spdx.org/licenses/Zlib.html>.
 
 ** Installation:
-*** user...
+*** Clone repository
 #+BEGIN_EXAMPLE
-$ git clone https://git.raoult.com:bruno/brlib.git
-or
 $ git clone https://github.com/braoult/brlib.git
+or
+$ git clone https://git.raoult.com:bruno/brlib.git
 #+END_EXAMPLE
 
-*** ...or developer
+*** Add CuTest submodule (optional)
 #+BEGIN_EXAMPLE
-$ git clone git@git.raoult.com:bruno/brlib.git
 $ cd brlib
-$ git remote add github git@github.com:braoult/brlib.git
+$ git submodule init
+$ git submodule update
 #+END_EXAMPLE
