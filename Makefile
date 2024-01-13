@@ -212,7 +212,7 @@ cleanbin:
 cleanbindir:
 	$(call rmdir,$(BINDIR),binaries)
 
-$(BINDIR)/%: $(TESTDIR)/%.c libs | $(BINDIR)
+$(BINDIR)/%: $(TESTDIR)/%.c $(SLIB) $(DLIB) | $(BINDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(CUTESTSRC) $(LDFLAGS) $(LIBS) -o $@
 
 ##################################### pre-processed (.i) and assembler (.s) output
