@@ -18,13 +18,15 @@
 
 if [[ ! -v _BRLIB_ENV_ ]]; then
     export _BRLIB_ENV_=1 BRLIB_ROOT LD_LIBRARY_PATH
-    BRLIB_SCRIPTDIR=$(realpath -L "$(dirname "${BASH_SOURCE[0]}")")
     BRLIB_ROOT=$(realpath -L "$(dirname "${BASH_SOURCE[0]}")/..")
-    BRLIB_LIBDIR="$BRLIB_ROOT/lib"
+
+    BRLIB_SCRIPTDIR="$BRLIB_ROOT/scripts"
     BRLIB_BINDIR="$BRLIB_ROOT/bin"
-    LD_LIBRARY_PATH="${BRLIB_LIBDIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     PATH="$PATH:$BRLIB_BINDIR:$BRLIB_SCRIPTDIR"
+
+    BRLIB_LIBDIR="$BRLIB_ROOT/lib"
+    LD_LIBRARY_PATH="${BRLIB_LIBDIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     #printf "R=%s L=%s LD=%s\n" "$BRLIB_ROOT" "$BRLIB_DIR" "$LD_LIBRARY_PATH"
-    unset BRLIB_LIBDIR BRLIB_BINDIR BRLIB_SCRIPTDIR
+    unset BRLIB_SCRIPTDIR BRLIB_BINDIR BRLIB_LIBDIR
     printf "brlib environment complete.\n"
 fi
