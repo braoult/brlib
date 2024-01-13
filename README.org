@@ -1,7 +1,6 @@
 #+title: brlib - A small personal C library
 #+OPTIONS: toc:nil
 #+OPTIONS: num:2
-#+startup: num
 
 ** License
 ~SPDX-License-Identifier: GPL-3.0-or-later <https://spdx.org/licenses/GPL-3.0-or-later.html>~~
@@ -20,14 +19,22 @@ See [[test/cutest/license.txt][license local copy]] or
 <https://spdx.org/licenses/Zlib.html>.
 
 ** Installation:
-*** Clone repository
+*** clone repository
+**** user...
 #+BEGIN_EXAMPLE
 $ git clone https://github.com/braoult/brlib.git
 or
-$ git clone https://git.raoult.com:bruno/brlib.git
+$ git clone https://git.raoult.com/bruno/brlib.git
 #+END_EXAMPLE
 
-*** Add CuTest submodule (optional)
+**** OR ...developer
+#+BEGIN_EXAMPLE
+$ git clone git@git.raoult.com:bruno/brlib.git
+$ cd brlib
+$ git remote add github git@github.com/braoult/brlib.git
+#+END_EXAMPLE
+
+*Add CuTest submodule (optional)*
 #+BEGIN_EXAMPLE
 $ cd brlib
 $ git submodule init
