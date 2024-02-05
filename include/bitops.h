@@ -13,7 +13,7 @@
 #ifndef _BITS_H
 #define _BITS_H
 
-#include "br.h"
+#include "brlib.h"
 #include "bitops-emulated/generic-ctz.h"
 #include "bitops-emulated/generic-clz.h"
 

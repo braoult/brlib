@@ -10,7 +10,7 @@
 
 #include <asm/bitsperlong.h>
 
-#include "br.h"
+#include "brlib.h"
 #include "bitops.h"
 
 /*

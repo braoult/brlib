@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <br.h>
+#include "brlib.h"
 
 #define NANOSEC  1000000000                       /* nano sec in sec */
 #define MILLISEC 1000000                          /* milli sec in sec */

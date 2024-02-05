@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "br.h"
+#include "brlib.h"
 #include "list.h"
 
 #define POOL_NAME_LENGTH (16)                     /* max name length including trailing \0 */

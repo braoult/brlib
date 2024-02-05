@@ -1,4 +1,4 @@
-/* br.h - misc macros.
+/* brlib.h - misc types/macros.
  *
  * Copyright (C) 2021-2024 Bruno Raoult ("br")
  * Licensed under the GNU General Public License v3.0 or later.
@@ -15,8 +15,8 @@
  * This header contains generic stuff.
  */
 
-#ifndef _BR_H
-#define _BR_H
+#ifndef _BRLIB_H
+#define _BRLIB_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -267,4 +267,4 @@ typedef signed char schar;
 	({ signed type __x = (x); __x < 0 ? -__x : __x; }), other)
 
 
-#endif  /* _BR_H */
+#endif  /* _BRLIB_H */

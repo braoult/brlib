@@ -13,7 +13,7 @@
 #ifndef _GENERIC_CTZ_H_
 #define _GENERIC_CTZ_H_
 
-#include "br.h"
+#include "brlib.h"
 
 /* Adapted from: http://www-graphics.stanford.edu/%7Eseander/bithacks.html
  */

@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "br.h"
+#include "brlib.h"
 #include "list.h"
 #include "pool.h"
 #include "debug.h"

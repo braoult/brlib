@@ -14,7 +14,7 @@
 #ifndef _PJWHASH_INLINE_H
 #define _PJWHASH_INLINE_H
 
-#include "br.h"
+#include "brlib.h"
 
 #define THREE_QUARTERS ((int) ((BITS_PER_INT * 3) / 4))
 #define ONE_EIGHTH     ((int) (BITS_PER_INT / 8))

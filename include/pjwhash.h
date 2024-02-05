@@ -13,7 +13,7 @@
 #ifndef _PJWHASH_H
 #define _PJWHASH_H
 
-#include "br.h"
+#include "brlib.h"
 
 /**
  * unsigned int pjwhash - PJW hash function

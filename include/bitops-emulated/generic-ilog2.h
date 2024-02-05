@@ -13,7 +13,7 @@
 #ifndef _GENERIC_ILOG2_H_
 #define _GENERIC_ILOG2_H_
 
-#include "br.h"
+#include "brlib.h"
 
 /*
  * See https://stackoverflow.com/a/11398748/3079831
