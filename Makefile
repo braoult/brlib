@@ -180,7 +180,7 @@ cleanobjdir:
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(DEPDIR)
 	@echo compiling $< "->" $@.
-	$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $< -o $@
+	@$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 ##################################### brlib libraries
 .PHONY: cleanlib cleanlibdir

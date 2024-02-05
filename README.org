@@ -7,16 +7,16 @@
 
 This work is, with exceptions below, Copyright (C) 2021-2024 Bruno Raoult
 ("br"), and licensed under the GNU General Public License v3.0 or later.
+
 Some rights reserved. See COPYING.
 
-*The licence exceptions are:**
-_Cutest testing framework.__
-You can find the original work on
-[[https://sourceforge.net/projects/cutest/files/cutest/][sourceforge]].
+*** The licence exceptions are:*
+
+**** _Cutest testing framework.__
+You can find the original work on [[https://sourceforge.net/projects/cutest/files/cutest/][sourceforge]].
 
 This software is (C) 2000-2003 Asim Jalis, under the zlib License.
-See [[test/cutest/license.txt][license local copy]] or
-<https://spdx.org/licenses/Zlib.html>.
+See [[test/cutest/license.txt][license local copy]] or <https://spdx.org/licenses/Zlib.html>.
 
 ** Installation:
 *** clone repository
