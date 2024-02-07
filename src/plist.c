@@ -32,7 +32,7 @@ static struct plist_head test_head;
 static void plist_check_prev_next(struct list_head *t, struct list_head *p,
 				  struct list_head *n)
 {
-    WARN(n->prev != p || p->next != n,
+    warn(n->prev != p || p->next != n,
          "top: %p, n: %p, p: %p\n"
          "prev: %p, n: %p, p: %p\n"
          "next: %p, n: %p, p: %p\n",
@@ -76,8 +76,8 @@ void plist_add(struct plist_node *node, struct plist_head *head)
     struct list_head *node_next = &head->node_list;
 
     plist_check_head(head);
-    WARN_ON(!plist_node_empty(node));
-    WARN_ON(!list_empty(&node->prio_list));
+    warn_on(!plist_node_empty(node));
+    warn_on(!list_empty(&node->prio_list));
 
     if (plist_head_empty(head))
         goto ins_node;
@@ -148,8 +148,8 @@ void plist_requeue(struct plist_node *node, struct plist_head *head)
     struct list_head *node_next = &head->node_list;
 
     plist_check_head(head);
-    BUG_ON(plist_head_empty(head));
-    BUG_ON(plist_node_empty(node));
+    bug_on(plist_head_empty(head));
+    bug_on(plist_node_empty(node));
 
     if (node == plist_last(head))
         return;

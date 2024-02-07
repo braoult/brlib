@@ -279,7 +279,7 @@ static inline int plist_node_empty(const struct plist_node *node)
 #ifdef CONFIG_DEBUG_PLIST
 # define plist_first_entry(head, type, member)          \
     ({                                                  \
-	WARN_ON(plist_head_empty(head));                \
+	warn_on(plist_head_empty(head));                \
 	container_of(plist_first(head), type, member);  \
     })
 #else
@@ -296,7 +296,7 @@ static inline int plist_node_empty(const struct plist_node *node)
 #ifdef CONFIG_DEBUG_PLIST
 # define plist_last_entry(head, type, member)           \
     ({                                                  \
-	WARN_ON(plist_head_empty(head));                \
+	warn_on(plist_head_empty(head));                \
 	container_of(plist_last(head), type, member);   \
     })
 #else

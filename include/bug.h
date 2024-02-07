@@ -1,68 +1,48 @@
-/* SPDX-License-Identifier: GPL-2.0 */
-#ifndef _BR_BUG_H
-#define _BR_BUG_H
+/* bug.h - bug_on/warn_on/warn functions.
+ *
+ * Copyright (C) 2021-2024 Bruno Raoult ("br")
+ * Licensed under the GNU General Public License v3.0 or later.
+ * Some rights reserved. See COPYING.
+ *
+ * You should have received a copy of the GNU General Public License along with this
+ * program. If not, see <https://www.gnu.org/licenses/gpl-3.0-standalone.html>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later <https://spdx.org/licenses/GPL-3.0-or-later.html>
+ *
+ */
+
+#ifndef _BUG_H
+#define _BUG_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
 #include "likely.h"
-#include "debug.h"
 
-/* BUG functions inspired by Linux kernel's <asm/bug.h>
- */
-
-#define panic() exit(0xff)
-
-/*
- * Don't use BUG() or BUG_ON() unless there's really no way out; one
- * example might be detecting data structure corruption in the middle
- * of an operation that can't be backed out of.  If the (sub)system
- * can somehow continue operating, perhaps with reduced functionality,
- * it's probably not BUG-worthy.
- *
- */
-#define BUG() do {                                                                      \
-        fprintf(stderr, "BUG: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
-        panic();                                                                        \
+#define bug_on(expr) do {                                                      \
+        if (unlikely(expr)) {                                                  \
+            fprintf(stderr,                                                    \
+                    "** BUG IN %s[%s:%d]: assertion \"" #expr "\" failed.\n",  \
+                    __func__, __FILE__,__LINE__);                              \
+            abort();                                                           \
+        }                                                                      \
     } while (0)
 
-#define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while (0)
+#define warn_on(expr) ({                                                       \
+        int _ret = !!(expr);                                                   \
+        if (unlikely(_ret))                                                    \
+            fprintf(stderr,                                                    \
+                    "** WARN ON %s[%s:%d]: assertion \"" #expr "\" failed.\n", \
+                    __func__, __FILE__,__LINE__);                              \
+         unlikely(_ret);                                                       \
+    })
 
-/*
- * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report significant
- * issues that need prompt attention if they should ever appear at runtime.
- *
- * Do not use these macros when checking for invalid external inputs
- * (e.g. invalid system call arguments, or invalid data coming from
- * network/devices), and on transient conditions like ENOMEM or EAGAIN.
- * These macros should be used for recoverable kernel issues only.
- * For invalid external inputs, transient conditions, etc use
- * pr_err[_once/_ratelimited]() followed by dump_stack(), if necessary.
- * Do not include "BUG"/"WARNING" in format strings manually to make these
- * conditions distinguishable from kernel issues.
- *
- * Use the versions with printk format strings to provide better diagnostics.
- */
-#define __WARN() do {                                                      \
-        fprintf(stderr, "WARNING: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
-    } while (0)
+#define warn(expr, format...) ({                                               \
+        int _ret = !!(expr);                                                   \
+        if (unlikely(_ret))                                                    \
+            vfprintf(stderr, format);                                          \
+        unlikely(_ret);                                                        \
+    })
 
-#define __WARN_printf(arg...) do {              \
-        vfprintf(stderr, arg);                  \
-    } while (0)
-
-#define WARN_ON(condition) ({                   \
-            int __ret_warn_on = !!(condition);  \
-            if (unlikely(__ret_warn_on))        \
-		__WARN();                       \
-            unlikely(__ret_warn_on);            \
-        })
-
-#define WARN(condition, format...) ({           \
-            int __ret_warn_on = !!(condition);  \
-            if (unlikely(__ret_warn_on))        \
-		__WARN_printf(format);          \
-            unlikely(__ret_warn_on);            \
-        })
-
-#endif /* _BR_BUG_H */
+#endif /* _BUG_H */
