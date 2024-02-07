@@ -38,10 +38,10 @@
          unlikely(_ret);                                                       \
     })
 
-#define warn(expr, format...) ({                                               \
+#define warn(expr, args...) ({                                                 \
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \
-            vfprintf(stderr, ##format);                                        \
+            fprintf(stderr, ##args);                                           \
         unlikely(_ret);                                                        \
     })
 
