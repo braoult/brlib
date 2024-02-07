@@ -41,7 +41,7 @@
 #define warn(expr, format...) ({                                               \
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \
-            vfprintf(stderr, format);                                          \
+            vfprintf(stderr, ##format);                                        \
         unlikely(_ret);                                                        \
     })
 
