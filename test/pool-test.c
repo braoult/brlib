@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "br.h"
+#include "brlib.h"
 #include "pool.h"
 #include "debug.h"
 

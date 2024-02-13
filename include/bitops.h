@@ -16,6 +16,7 @@
 #include "brlib.h"
 #include "bitops-emulated/generic-ctz.h"
 #include "bitops-emulated/generic-clz.h"
+#include "bitops-emulated/generic-bswap.h"
 
 #ifndef __has_builtin
 #define __has_builtin(x) 0
@@ -35,7 +36,9 @@
 #if __has_builtin(__builtin_ffs)
 #   define HAS_FFS
 #endif
-
+#if __has_builtin(__builtin_bswap32)
+#   define HAS_BSWAP
+#endif
 
 /**
  * print_bitops_impl() - print bitops implementation.
@@ -173,6 +176,24 @@ void print_bitops_impl(void);
 #endif
 #define ffz32(n)  ffs32(~(n))
 #define ffz64(n)  ffs64(~(n))
+
+/**
+ * bswap32, bswap64 - reverse bytes: 0x01020304 -> 0x04030201
+ * @n: unsigned 32 or 64 bits integer.
+ *
+ * ffs(n) is similar to ctz(n) + 1, but returns 0 if n == 0 (except
+ * for ctz version, where ffs(0) is undefined).
+ * ffz(n) is ffz(~n), with undefine value if n = 0.
+ */
+#if defined(HAS_BSWAP)
+#   define __bswap32_native(n)  __builtin_bswap32(n)
+#   define __bswap64_native(n)  __builtin_bswap64(n)
+#   define bswap32(n) __bswap32_native(n)
+#   define bswap64(n) __bswap64_native(n)
+#else
+#   define bswap32(n) __bswap32_emulated(n)
+#   define bswap64(n) __bswap64_emulated(n)
+#endif
 
 /**
  * fls32, fls64 - return one plus MSB index: 00101000 -> 6
