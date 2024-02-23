@@ -56,7 +56,7 @@ CPPFLAGS  := $(strip $(CPPFLAGS))
 
 ##################################### compiler flags
 CFLAGS    := -std=gnu11
-CFLAGS    += -O2
+CFLAGS    += -O3
 CFLAGS    += -g
 CFLAGS    += -Wall
 CFLAGS    += -Wextra
@@ -248,7 +248,7 @@ cleanccls:
 # maybe run cleanobj cleanlibobj in commands ?
 $(CCLSCMDS): cleanobj $(SRC) | $(CCLSROOT)
 	@echo "Generating ccls compile commands file ($@)."
-	@$(BEAR) -- make test
+	@$(BEAR) -- $(MAKE) test
 
 ##################################### valgrind (mem check)
 .PHONY: memcheck
