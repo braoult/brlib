@@ -51,6 +51,9 @@ CPPFLAGS  := -I $(INCDIR)
 CPPFLAGS  += -DDEBUG_DEBUG                                  # activate logs funcs
 CPPFLAGS  += -DDEBUG_POOL                                   # mem pools
 
+CPPFLAGS  += -DBUG_ON					    # bug_on in bug.h
+CPPFLAGS  += -DWARN_ON					    # warn_on in bug.h
+
 # remove extraneous spaces (due to spaces before comments)
 CPPFLAGS  := $(strip $(CPPFLAGS))
 

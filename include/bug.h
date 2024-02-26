@@ -16,10 +16,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdarg.h>
 
 #include "likely.h"
 
+#ifdef BUG_ON
 #define bug_on(expr) do {                                                      \
         if (unlikely(expr)) {                                                  \
             fprintf(stderr,                                                    \
@@ -28,7 +30,11 @@
             abort();                                                           \
         }                                                                      \
     } while (0)
+#else
+#define bug_on(expr) ({ 0; })
+#endif
 
+#ifdef WARN_ON
 #define warn_on(expr) ({                                                       \
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \
@@ -37,7 +43,9 @@
                     __func__, __FILE__,__LINE__);                              \
          unlikely(_ret);                                                       \
     })
-
+#else
+#define warn_on(expr) ({ 0; })
+#endif
 #define warn(expr, args...) ({                                                 \
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \
