@@ -18,6 +18,7 @@
 #ifndef _BRLIB_H
 #define _BRLIB_H
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <bits/wordsize.h>                        /* defines __WORDSIZE: 32 or 64 */
