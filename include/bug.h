@@ -11,8 +11,21 @@
  *
  */
 
-#ifndef _BUG_H
-#define _BUG_H
+/* we allow multiple inclusions, so that BUG_ON/WARN_ON can change during
+ * compilation.
+ */
+#ifdef BUG_H
+
+#undef BUG_H
+
+/* reset all macros */
+#undef bug_on
+#undef warn_on
+#undef warn
+
+#endif  /* BUG_H */
+
+#define BUG_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +35,7 @@
 #include "likely.h"
 
 #ifdef BUG_ON
-#define bug_on(expr) do {                                                      \
+#define bug_on(expr) do {                                               \
         if (unlikely(expr)) {                                                  \
             fprintf(stderr,                                                    \
                     "** BUG IN %s[%s:%d]: assertion \"" #expr "\" failed.\n",  \
@@ -31,7 +44,7 @@
         }                                                                      \
     } while (0)
 #else
-#define bug_on(expr) ({ 0; })
+#define bug_on(expr)
 #endif
 
 #ifdef WARN_ON
@@ -46,11 +59,10 @@
 #else
 #define warn_on(expr) ({ 0; })
 #endif
+
 #define warn(expr, args...) ({                                                 \
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \
             fprintf(stderr, ##args);                                           \
         unlikely(_ret);                                                        \
     })
-
-#endif /* _BUG_H */
