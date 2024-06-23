@@ -54,7 +54,7 @@
             fprintf(stderr,                                                    \
                     "** WARN ON %s[%s:%d]: assertion \"" #expr "\" failed.\n", \
                     __func__, __FILE__,__LINE__);                              \
-         unlikely(_ret);                                                       \
+        _ret;                                                                  \
     })
 #else
 #define warn_on(expr) ({ 0; })
@@ -64,5 +64,5 @@
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \
             fprintf(stderr, ##args);                                           \
-        unlikely(_ret);                                                        \
+        _ret;                                                                  \
     })
