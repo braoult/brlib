@@ -32,10 +32,17 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
+#ifndef BUG_ON
+#define BUG_ON 0
+#endif
+#ifndef WARN_ON
+#define WARN_ON 0
+#endif
+
 #include "likely.h"
 
-#ifdef BUG_ON
-#define bug_on(expr) do {                                               \
+#if (BUG_ON + 0 == 1)
+#define bug_on(expr) do {                                                      \
         if (unlikely(expr)) {                                                  \
             fprintf(stderr,                                                    \
                     "** BUG IN %s[%s:%d]: assertion \"" #expr "\" failed.\n",  \
@@ -47,7 +54,7 @@
 #define bug_on(expr)
 #endif
 
-#ifdef WARN_ON
+#if (WARN_ON + 0 == 1)
 #define warn_on(expr) ({                                                       \
         int _ret = !!(expr);                                                   \
         if (unlikely(_ret))                                                    \

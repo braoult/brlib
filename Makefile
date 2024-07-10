@@ -44,33 +44,88 @@ BIN       := $(addprefix $(BINDIR)/,$(TEST_FN:.c=))
 
 CCLSCMDS  := compile_commands.json
 
-##################################### pre-processor flags
-CPPFLAGS  := -I $(INCDIR)
-#CPPFLAGS  += -DDEBUG                                       # global
-#CPPFLAGS  += -DDEBUG_DEBUG_C                               # log() funcs debug
-CPPFLAGS  += -DDEBUG_DEBUG                                  # activate logs funcs
-CPPFLAGS  += -DDEBUG_POOL                                   # mem pools
+##################################### Check for compiler and requested build
+BUILDS    := release dev perf debug
+# last compilation build
+BUILDFILE := .lastbuild
+lastbuild := $(file < $(BUILDFILE))
+$(info brlib last:$(lastbuild))
+# default to gcc
+CC        ?= cc
+ifeq ($(CC),cc)
+        CC = gcc
+endif
 
-CPPFLAGS  += -DBUG_ON					    # bug_on in bug.h
-CPPFLAGS  += -DWARN_ON					    # warn_on in bug.h
+# if no build specified, use last one
+ifeq ($(build),)
+        build := $(lastbuild)
+endif
+# if build is still undefined, set a default
+ifeq ($(build),)
+        build := release
+endif
+
+$(info brlib build=$(build))
+
+# check for valid build
+ifeq ($(filter $(build),$(BUILDS)),)
+        $(error Error: Unknown build=`$(build)`. Possible builds are: $(BUILDS))
+endif
+
+# if new build, rewrite BUILDFILE
+ifneq ($(build),$(lastbuild))
+        $(info New build:`$(build)` (was:$(lastbuild)))
+        $(file >$(BUILDFILE),$(build))
+endif
+##################################### pre-processor flags
+override CPPFLAGS  += -I $(INCDIR)
+
+ifeq ($(BUILD),release)
+        CPPFLAGS  += -DNDEBUG                               # assert (unused)
+        CPPFLAGS  += -DBUG_ON=0                          CPPFLAGS  += -DWARN_ON=0                 else # ifeq ($(BUILD),dev)
+        #CPPFLAGS  += -DDEBUG                            #CPPFLAGS  += -DDEBUG_DEBUG_C                    CPPFLAGS  += -DDEBUG_DEBUG                       CPPFLAGS  += -DDEBUG_POOL                        CPPFLAGS  += -DBUG_ON=1                          CPPFLAGS  += -DWARN_ON=1                            # warn_on in bug.h
+endif
 
 # remove extraneous spaces (due to spaces before comments)
 CPPFLAGS  := $(strip $(CPPFLAGS))
 
 ##################################### compiler flags
 CFLAGS    := -std=gnu11
-CFLAGS    += -O3
-CFLAGS    += -g
+
 CFLAGS    += -Wall
 CFLAGS    += -Wextra
 CFLAGS    += -march=native
 CFLAGS    += -Wmissing-declarations
 CFLAGS    += -Wno-unused-result
+# TODO: specific to dynamic
 CFLAGS    += -fPIC
-# for gprof
-#CFLAGS    += -pg
-# Next one may be useful for valgrind (some invalid instructions)
-# CFLAGS   += -mno-tbm
+
+### dev OR release
+ifeq ($(BUILD),release)
+        CFLAGS    += -O3
+        CFLAGS    += -funroll-loops
+        CFLAGS    += -flto
+else ifeq ($(BUILD),dev)
+        CFLAGS    += -Og
+        CFLAGS    += -g
+        CFLAGS    += -ginline-points                   # inlined funcs debug info
+        # for gprof
+        #CFLAGS    += -pg
+        # Next one may be useful for valgrind (some invalid instructions)
+        # CFLAGS   += -mno-tbm
+else ifeq ($(BUILD),perf)
+        CFLAGS    += -O3
+        CFLAGS    += -g                                # symbols (gdb, perf, etc.)
+        CFLAGS    += -ginline-points                   # inlined funcs debug info
+        CFLAGS    += -funroll-loops
+else ifeq ($(BUILD),debug)
+        CFLAGS    += -O0
+        CFLAGS    += -g                                # symbols (gdb, perf, etc.)
+        # for gprof
+        #CFLAGS += -pg
+        # Next one may be useful for valgrind (when invalid instructions)
+        #CFLAGS += -mno-tbm
+endif
 
 CFLAGS    := $(strip $(CFLAGS))
 
@@ -80,14 +135,21 @@ LDFLAGS   := -L$(LIBDIR)
 LIBS      := -l$(LIB)
 DEPFLAGS   = -MMD -MP -MF $(DEPDIR)/$*.d
 
+ifeq ($(BUILD),release)
+        LDFLAGS   += -flto
+endif
+
 ##################################### General targets
-.PHONY: all libs compile test emacs ccls bear clean cleanall cleanallall
+.PHONY: all libs lib-static lib-dynamic compile test emacs ccls bear clean \
+        cleanall cleanallall
 
 # default: build libraries
 all: libs
 
-# default: build libraries
-libs: $(DLIB) $(SLIB)
+# libraries
+libs: lib-static lib-dynamic
+lib-static: $(SLIB)
+lib-dynamic: $(DLIB)
 
 # build objects
 compile: $(OBJ)
@@ -181,9 +243,10 @@ cleanobj:
 cleanobjdir:
 	$(call rmdir,$(OBJDIR),brlib objects)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(DEPDIR)
+# $(OBJDIR)/%.o: $(BUILDFILE)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(BUILDFILE) | $(OBJDIR) $(DEPDIR)
 	@echo compiling $< "->" $@.
-	@$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $< -o $@
+	$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 ##################################### brlib libraries
 .PHONY: cleanlib cleanlibdir

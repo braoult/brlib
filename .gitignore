@@ -2,6 +2,7 @@ compile_commands.json
 core
 /.ccls-cache/
 /test/test/
+.lastbuild
 # /test/cutest/
 /tmp/
 # created when building
