@@ -11,20 +11,7 @@
  *
  */
 
-/* we allow multiple inclusions, so that BUG_ON/WARN_ON can change during
- * compilation.
- */
-#ifdef BUG_H
-
-#undef BUG_H
-
-/* reset all macros */
-#undef bug_on
-#undef warn_on
-#undef warn
-
-#endif  /* BUG_H */
-
+#ifndef BUG_H
 #define BUG_H
 
 #include <stdio.h>
@@ -32,44 +19,43 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-#ifndef BUG_ON
-#define BUG_ON 0
-#endif
-#ifndef WARN_ON
-#define WARN_ON 0
-#endif
-
-#include "likely.h"
-
-#if (BUG_ON + 0 == 1)
-#define bug_on(expr) do {                                                      \
-        if (unlikely(expr)) {                                                  \
-            fprintf(stderr,                                                    \
-                    "** BUG IN %s[%s:%d]: assertion \"" #expr "\" failed.\n",  \
-                    __func__, __FILE__,__LINE__);                              \
-            abort();                                                           \
-        }                                                                      \
+#define bug_on_always(expr) do {                                      \
+        if (expr) {                                                   \
+            fprintf(stderr,                                           \
+                    "** BUG ON %s[%s:%d]: assertion '%s' failed.\n",  \
+                    __func__, __FILE__,__LINE__, #expr);                    \
+            abort();                                                  \
+            /* not reached */                                         \
+        }                                                             \
     } while (0)
+
+#define warn(expr, args...) ({                                        \
+        int _ret = !!(expr);                                          \
+        if (_ret)                                                     \
+            fprintf(stderr, ##args);                                  \
+        _ret;                                                         \
+    })
+
+#define warn_on_always(expr) ({                                       \
+            warn(expr,                                                \
+                 "** WARN ON %s[%s:%d]: assertion '%s' failed.\n",    \
+                 __func__, __FILE__,__LINE__, #expr);                       \
+        })
+
+#ifdef BUG_ON
+
+#define bug_on(expr)          bug_on_always(expr)
+
+#define warn_on(expr)         warn_on_always(expr)
+#define warn_on_or_eval(expr) warn_on(expr)
+
 #else
+
 #define bug_on(expr)
-#endif
 
-#if (WARN_ON + 0 == 1)
-#define warn_on(expr) ({                                                       \
-        int _ret = !!(expr);                                                   \
-        if (unlikely(_ret))                                                    \
-            fprintf(stderr,                                                    \
-                    "** WARN ON %s[%s:%d]: assertion \"" #expr "\" failed.\n", \
-                    __func__, __FILE__,__LINE__);                              \
-        _ret;                                                                  \
-    })
-#else
-#define warn_on(expr) ({ 0; })
-#endif
+#define warn_on(expr)
+#define warn_on_or_eval(expr) (expr)
 
-#define warn(expr, args...) ({                                                 \
-        int _ret = !!(expr);                                                   \
-        if (unlikely(_ret))                                                    \
-            fprintf(stderr, ##args);                                           \
-        _ret;                                                                  \
-    })
+#endif  /* BUG_ON */
+
+#endif /* BUG_H */
